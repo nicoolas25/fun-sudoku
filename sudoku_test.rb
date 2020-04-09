@@ -38,14 +38,14 @@ class Sudoku
     @lines[row][column]
   end
 
-  def each_empty_positions
-    return enum_for(:each_empty_positions) unless block_given?
-
+  def empty_positions
+    result = []
     @lines.each_with_index do |cells, row|
       cells.each_with_index do |cell, column|
-        yield [row, column] if cell == EMPTY_CELL
+        result << [row, column] if cell == EMPTY_CELL
       end
     end
+    result
   end
 
   def to_s
@@ -112,22 +112,19 @@ class SudokuProblem
   end
 
   def solved?
-    @sudoku.each_empty_positions.peek
-    false
-  rescue StopIteration
-    true
+    @sudoku.empty_positions.empty?
   end
 
   def possible_paths
-    row, column = @sudoku.each_empty_positions.next
+    row, column = @sudoku.empty_positions.first
+    return [] unless row && column
+
     ConstraintChecker.new(sudoku: @sudoku)
       .available_values(row: row, column: column)
       .map do |value|
         sudoku = @sudoku.with(row: row, column: column, value: value)
         SudokuProblem.new(sudoku: sudoku)
       end
-  rescue StopIteration
-    []
   end
 end
 
@@ -230,8 +227,8 @@ class SudokuTest < Minitest::Test
   end
 
   def test_reading_empty_cells
-    assert_equal 81, Sudoku.new.each_empty_positions.to_a.size
-    assert_equal 80, Sudoku.new.with(row: 0, column: 8, value: 2).each_empty_positions.to_a.size
+    assert_equal 81, Sudoku.new.empty_positions.size
+    assert_equal 80, Sudoku.new.with(row: 0, column: 8, value: 2).empty_positions.size
   end
 end
 
