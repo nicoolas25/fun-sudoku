@@ -89,13 +89,6 @@ class ConstraintChecker
     end
   end
 
-  def valid?
-    ROWS.each    { |positions| return false unless valid_positions?(positions) }
-    COLUMNS.each { |positions| return false unless valid_positions?(positions) }
-    REGIONS.each { |positions| return false unless valid_positions?(positions) }
-    true
-  end
-
   private
 
   def valid_positions?(positions)
@@ -163,21 +156,6 @@ class Backtracker
 end
 
 class ConstraitCheckerTest < Minitest::Test
-  def test_invalid_row
-    sudoku = invalid_sudoku(ROWS.sample)
-    refute ConstraintChecker.new(sudoku: sudoku).valid?
-  end
-
-  def test_invalid_column
-    sudoku = invalid_sudoku(COLUMNS.sample)
-    refute ConstraintChecker.new(sudoku: sudoku).valid?
-  end
-
-  def test_invalid_region
-    sudoku = invalid_sudoku(REGIONS.sample)
-    refute ConstraintChecker.new(sudoku: sudoku).valid?
-  end
-
   def test_available_values_in_a_row
     _test_available_values(ROWS.sample)
   end
@@ -203,14 +181,6 @@ class ConstraitCheckerTest < Minitest::Test
 
     constraint_checker = ConstraintChecker.new(sudoku: sudoku)
     assert_equal [value], constraint_checker.available_values(row: row, column: column)
-  end
-
-  def invalid_sudoku(positions, sudoku: Sudoku.new)
-    (row1, column1), (row2, column2) = positions.sample(2)
-    same_value = rand(1..9)
-    sudoku
-      .with(row: row1, column: column1, value: same_value)
-      .with(row: row2, column: column2, value: same_value)
   end
 
   def fill_all_positions(positions, sudoku: Sudoku.new)
