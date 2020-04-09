@@ -301,6 +301,13 @@ class SolveSudokuTest < Minitest::Test
     GRID
   end
 
+  def test_randomly_solved_sudoku_are_valid
+    sudoku = Sudoku.new
+    problem = SudokuRandomProblem.new(sudoku: sudoku)
+    solution = Backtracker.new(problem: problem).solve.sudoku
+    assert ConstraintChecker.new(sudoku: solution).valid?
+  end
+
   def test_empty_sudoku_is_randomly_solved
     sudoku = Sudoku.new
     problem = SudokuRandomProblem.new(sudoku: sudoku)
