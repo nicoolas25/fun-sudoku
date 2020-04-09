@@ -111,6 +111,57 @@ class ConstraintChecker
   end
 end
 
+class SudokuProblem
+  attr_reader :sudoku
+
+  def initialize(sudoku:)
+    @sudoku = sudoku
+  end
+
+  def solved?
+    @sudoku.each_empty_positions.peek
+    false
+  rescue StopIteration
+    true
+  end
+
+  def possible_paths
+    row, column = @sudoku.each_empty_positions.next
+    ConstraintChecker.new(sudoku: @sudoku)
+      .available_values(row: row, column: column)
+      .map do |value|
+        sudoku = @sudoku.with(row: row, column: column, value: value)
+        SudokuProblem.new(sudoku: sudoku)
+      end
+  rescue StopIteration
+    []
+  end
+end
+
+class Backtracker
+  NoSolutionFound = Class.new(StandardError)
+
+  def initialize(problem:)
+    @problem = problem
+  end
+
+  def solve
+    return @problem if @problem.solved?
+
+    paths = @problem.possible_paths
+    raise NoSolutionFound if paths.empty?
+
+    paths.each do |problem|
+      backtracker = Backtracker.new(problem: problem)
+      return backtracker.solve
+    rescue NoSolutionFound
+      next
+    end
+
+    raise NoSolutionFound
+  end
+end
+
 class ConstraitCheckerTest < Minitest::Test
   def test_invalid_row
     sudoku = invalid_sudoku(ROWS.sample)
@@ -211,5 +262,23 @@ class SudokuTest < Minitest::Test
   def test_reading_empty_cells
     assert_equal 81, Sudoku.new.each_empty_positions.to_a.size
     assert_equal 80, Sudoku.new.with(row: 0, column: 8, value: 2).each_empty_positions.to_a.size
+  end
+end
+
+class SolveSudokuTest < Minitest::Test
+  def test_empty_sudoku_is_solved
+    sudoku = Sudoku.new
+    problem = SudokuProblem.new(sudoku: sudoku)
+    assert_equal <<~GRID, Backtracker.new(problem: problem).solve.sudoku.to_s
+      123456789
+      456789123
+      789123456
+      214365897
+      365897214
+      897214365
+      531642978
+      642978531
+      978531642
+    GRID
   end
 end
