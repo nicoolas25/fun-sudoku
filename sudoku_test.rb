@@ -116,15 +116,37 @@ class SudokuProblem
   end
 
   def possible_paths
-    row, column = @sudoku.empty_positions.first
+    row, column = empty_position
     return [] unless row && column
 
-    ConstraintChecker.new(sudoku: @sudoku)
+    available_values(row: row, column: column).map do |value|
+      sudoku = @sudoku.with(row: row, column: column, value: value)
+      SudokuProblem.new(sudoku: sudoku)
+    end
+  end
+
+  private
+
+  def empty_position
+    @sudoku.empty_positions.first
+  end
+
+  def available_values(row:, column:)
+    ConstraintChecker
+      .new(sudoku: @sudoku)
       .available_values(row: row, column: column)
-      .map do |value|
-        sudoku = @sudoku.with(row: row, column: column, value: value)
-        SudokuProblem.new(sudoku: sudoku)
-      end
+  end
+end
+
+class SudokuRandomProblem < SudokuProblem
+  private
+
+  def empty_position
+    @sudoku.empty_positions.sample
+  end
+
+  def available_values(row:, column:)
+    super(row: row, column: column).shuffle
   end
 end
 
@@ -247,5 +269,14 @@ class SolveSudokuTest < Minitest::Test
       642978531
       978531642
     GRID
+  end
+
+  def test_empty_sudoku_is_randomly_solved
+    sudoku = Sudoku.new
+    problem = SudokuRandomProblem.new(sudoku: sudoku)
+    refute_equal(
+      Backtracker.new(problem: problem).solve.sudoku.to_s,
+      Backtracker.new(problem: problem).solve.sudoku.to_s,
+    )
   end
 end
