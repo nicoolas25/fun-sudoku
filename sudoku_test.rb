@@ -6,11 +6,13 @@ def EMPTY_CELL.to_s
   "."
 end
 
+Position = Struct.new(:row, :column)
+
 # Constants holding lists of lists of (row, column) pairs. Each sublist
 # corespond to either a full row, a full column, or a full region's
 # positions.
-ROWS = (0..8).map { |row| (0..8).map { |column| [row, column] } }
-COLUMNS = (0..8).map { |column| (0..8).map { |row| [row, column] } }
+ROWS = (0..8).map { |row| (0..8).map { |column| Position.new(row, column) } }
+COLUMNS = (0..8).map { |column| (0..8).map { |row| Position.new(row, column) } }
 REGIONS = [
   [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
   [[0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]],
@@ -21,38 +23,33 @@ REGIONS = [
   [[6, 0], [6, 1], [6, 2], [7, 0], [7, 1], [7, 2], [8, 0], [8, 1], [8, 2]],
   [[6, 3], [6, 4], [6, 5], [7, 3], [7, 4], [7, 5], [8, 3], [8, 4], [8, 5]],
   [[6, 6], [6, 7], [6, 8], [7, 6], [7, 7], [7, 8], [8, 6], [8, 7], [8, 8]],
-]
+].map { |region| region.map { |row, column| Position.new(row, column) } }
+POSITIONS = ROWS.flatten
 
 class Sudoku
-  def initialize(lines: nil)
-    @lines = lines || Array.new(9) { Array.new(9) { EMPTY_CELL } }
+  def initialize(cells: {})
+    @cells = cells
   end
 
-  def with(row:, column:, value:)
-    lines = @lines.map.with_index { |cells, i| (i != row) ? cells : cells.dup }
-    lines[row][column] = value
-    Sudoku.new(lines: lines)
+  def with(position:, value:)
+    cells = @cells.dup
+    cells[position] = value
+    Sudoku.new(cells: cells)
   end
 
-  def read(row:, column:)
-    @lines[row][column]
+  def read(position:)
+    @cells[position] || EMPTY_CELL
   end
 
   def empty_positions
-    result = []
-    @lines.each_with_index do |cells, row|
-      cells.each_with_index do |cell, column|
-        result << [row, column] if cell == EMPTY_CELL
-      end
-    end
-    result
+    POSITIONS - @cells.keys
   end
 
   def to_s
     "".tap do |buffer|
-      @lines.each do |cells|
-        cells.each do |cell|
-          buffer << cell.to_s
+      0.upto(8) do |row|
+        0.upto(8) do |column|
+          buffer << read(position: Position.new(row, column)).to_s
         end
         buffer << "\n"
       end
@@ -65,22 +62,22 @@ class ConstraintChecker
     @sudoku = sudoku
   end
 
-  def available_values(row:, column:)
-    if @sudoku.read(row: row, column: column) != EMPTY_CELL
-      raise ArgumentError, "Position (#{row}, #{column}) is already filled"
+  def available_values(position:)
+    if @sudoku.read(position: position) != EMPTY_CELL
+      raise ArgumentError, "Position (#{position.row}, #{position.column}) is already filled"
     end
 
-    region = REGIONS.find { |positions| positions.include?([row, column]) }
+    region = REGIONS.find { |positions| positions.include?(position) }
 
     unless (region_counts = valid_positions?(region))
       raise ArgumentError, "The region is already broken"
     end
 
-    unless (row_counts = valid_positions?(ROWS[row]))
+    unless (row_counts = valid_positions?(ROWS[position.row]))
       raise ArgumentError, "The row is already broken"
     end
 
-    unless (column_counts = valid_positions?(COLUMNS[column]))
+    unless (column_counts = valid_positions?(COLUMNS[position.column]))
       raise ArgumentError, "The column is already broken"
     end
 
@@ -100,8 +97,8 @@ class ConstraintChecker
 
   def valid_positions?(positions)
     Hash.new(0).tap do |counts|
-      positions.each do |row, column|
-        value = @sudoku.read(row: row, column: column)
+      positions.each do |position|
+        value = @sudoku.read(position: position)
         next if EMPTY_CELL == value
 
         total = (counts[value] += 1)
@@ -123,11 +120,11 @@ class SudokuProblem
   end
 
   def possible_paths
-    row, column = empty_position
-    return [] unless row && column
+    position = empty_position
+    return [] unless position
 
-    available_values(row: row, column: column).map do |value|
-      sudoku = @sudoku.with(row: row, column: column, value: value)
+    available_values(position: position).map do |value|
+      sudoku = @sudoku.with(position: position, value: value)
       SudokuProblem.new(sudoku: sudoku)
     end
   end
@@ -138,10 +135,10 @@ class SudokuProblem
     @sudoku.empty_positions.first
   end
 
-  def available_values(row:, column:)
+  def available_values(position:)
     ConstraintChecker
       .new(sudoku: @sudoku)
-      .available_values(row: row, column: column)
+      .available_values(position: position)
   end
 end
 
@@ -152,8 +149,8 @@ class SudokuRandomProblem < SudokuProblem
     @sudoku.empty_positions.sample
   end
 
-  def available_values(row:, column:)
-    super(row: row, column: column).shuffle
+  def available_values(position:)
+    super(position: position).shuffle
   end
 end
 
@@ -215,26 +212,26 @@ class ConstraitCheckerTest < Minitest::Test
     # Put all numbers in the positions
     sudoku = fill_all_positions(positions)
     # Pick one position and remember what it was filled with
-    row, column = positions.sample
-    value = sudoku.read(row: row, column: column)
+    position = positions.sample
+    value = sudoku.read(position: position)
     # Clean that position
-    sudoku = sudoku.with(row: row, column: column, value: EMPTY_CELL)
+    sudoku = sudoku.with(position: position, value: EMPTY_CELL)
 
     constraint_checker = ConstraintChecker.new(sudoku: sudoku)
-    assert_equal [value], constraint_checker.available_values(row: row, column: column)
+    assert_equal [value], constraint_checker.available_values(position: position)
   end
 
   def invalid_sudoku(positions, sudoku: Sudoku.new)
-    (row1, column1), (row2, column2) = positions.sample(2)
+    position1, position2 = positions.sample(2)
     same_value = rand(1..9)
     sudoku
-      .with(row: row1, column: column1, value: same_value)
-      .with(row: row2, column: column2, value: same_value)
+      .with(position: position1, value: same_value)
+      .with(position: position2, value: same_value)
   end
 
   def fill_all_positions(positions, sudoku: Sudoku.new)
-    positions.shuffle.zip(1..9).reduce(sudoku) do |result, ((row, column), value)|
-      result.with(row: row, column: column, value: value)
+    positions.shuffle.zip(1..9).reduce(sudoku) do |result, (position, value)|
+      result.with(position: position, value: value)
     end
   end
 end
@@ -255,7 +252,7 @@ class SudokuTest < Minitest::Test
   end
 
   def test_setting_a_cell_with_something
-    assert_equal <<~GRID, Sudoku.new.with(row: 0, column: 7, value: 4).to_s
+    assert_equal <<~GRID, Sudoku.new.with(position: Position.new(0, 7), value: 4).to_s
       .......4.
       .........
       .........
@@ -269,18 +266,19 @@ class SudokuTest < Minitest::Test
   end
 
   def test_reading_a_cell_without_content
-    assert_equal EMPTY_CELL, Sudoku.new.read(row: 2, column: 0)
+    assert_equal EMPTY_CELL, Sudoku.new.read(position: Position.new(2, 0))
   end
 
   def test_reading_a_cell_with_content
+    position = Position.new(4, 2)
     content = Object.new
-    sudoku = Sudoku.new.with(row: 4, column: 2, value: content)
-    assert_equal content, sudoku.read(row: 4, column: 2)
+    sudoku = Sudoku.new.with(position: position, value: content)
+    assert_equal content, sudoku.read(position: position)
   end
 
   def test_reading_empty_cells
     assert_equal 81, Sudoku.new.empty_positions.size
-    assert_equal 80, Sudoku.new.with(row: 0, column: 8, value: 2).empty_positions.size
+    assert_equal 80, Sudoku.new.with(position: Position.new(0, 8), value: 2).empty_positions.size
   end
 end
 
