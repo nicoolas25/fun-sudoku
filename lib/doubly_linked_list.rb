@@ -25,12 +25,6 @@ class DoublyLinkedList
     end
   end
 
-  def each_values
-    return to_enum(__method__) unless block_given?
-
-    each { |entry| yield entry.value }
-  end
-
   class Entry
     attr_accessor :value, :left, :right
 

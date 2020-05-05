@@ -33,38 +33,38 @@ class DoublyLinkedListTest < Minitest::Test
 
   def test_adding_multiple_values
     list = DoublyLinkedList.new << 1 << 2 << 3
-    assert_equal [1, 2, 3], list.each_values.to_a
+    assert_equal [1, 2, 3], values(list)
   end
 
   def test_removing_and_restoring_value
     list = DoublyLinkedList.new << 1 << 2 << 3
     entry = list.find { |e| e.value == 2 }
     entry.remove
-    assert_equal [1, 3], list.each_values.to_a
+    assert_equal [1, 3], values(list)
 
     entry.restore
-    assert_equal [1, 2, 3], list.each_values.to_a
+    assert_equal [1, 2, 3], values(list)
   end
 
   def test_removing_and_restoring_the_first_value
     list = DoublyLinkedList.new << 1 << 2 << 3
     entry = list.find { |e| e.value == 1 }
     entry.remove
-    assert_equal [2, 3], list.each_values.to_a
+    assert_equal [2, 3], values(list)
 
     entry.restore
-    assert_equal [1, 2, 3], list.each_values.to_a
+    assert_equal [1, 2, 3], values(list)
   end
 
   def test_removing_and_restoring_the_last_value
     list = DoublyLinkedList.new << 1 << 2 << 3
     entry = list.find { |e| e.value == 3 }
     entry.remove
-    assert_equal [1, 2], list.each_values.to_a
+    assert_equal [1, 2], values(list)
     assert entry.removed?
 
     entry.restore
-    assert_equal [1, 2, 3], list.each_values.to_a
+    assert_equal [1, 2, 3], values(list)
     refute entry.removed?
   end
 
@@ -73,7 +73,7 @@ class DoublyLinkedListTest < Minitest::Test
     entry = list.find { |e| e.value == 2 }
     entry.remove
     entry.remove
-    assert_equal [1, 3], list.each_values.to_a
+    assert_equal [1, 3], values(list)
   end
 
   def test_restoring_twice_does_not_mess_up_the_list
@@ -82,6 +82,10 @@ class DoublyLinkedListTest < Minitest::Test
     entry.remove
     entry.restore
     entry.restore
-    assert_equal [1, 2, 3], list.each_values.to_a
+    assert_equal [1, 2, 3], values(list)
+  end
+
+  def values(list)
+    list.map(&:value)
   end
 end
