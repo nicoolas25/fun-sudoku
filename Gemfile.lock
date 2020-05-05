@@ -2,12 +2,14 @@ GEM
   remote: https://rubygems.org/
   specs:
     minitest (5.14.0)
+    rake (13.0.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   minitest
+  rake
 
 BUNDLED WITH
    2.0.2
