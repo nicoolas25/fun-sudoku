@@ -8,13 +8,8 @@ class DoublyLinkedList
     end
   end
 
-  def <<(value)
+  def append(value)
     @header.left.insert_after(value)
-    self
-  end
-
-  def last
-    @header.left
   end
 
   def each

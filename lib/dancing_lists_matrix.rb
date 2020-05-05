@@ -32,7 +32,6 @@ class DancingListsMatrix
 
   def add(list, id)
     value = Value.new(id, Set.new)
-    list << value
-    list.last
+    list.append(value)
   end
 end
