@@ -8,7 +8,20 @@ class SudokuMatrix < DancingListsMatrix
 
   def initialize
     super
+    @clues = {}
     create_links!
+  end
+
+  def clues
+    @clues.values
+  end
+
+  def add_clue(row:, col:, digit:)
+    raise 'This position already have a clue' if @clues.key?([row, col])
+
+    position = Position.new(row, col, digit)
+    unlink_position(position)
+    @clues[[row, col]] = position
   end
 
   def self.to_string(positions: [])
@@ -26,24 +39,37 @@ class SudokuMatrix < DancingListsMatrix
     (0..8).each do |row|
       (0..8).each do |col|
         (1..9).map do |digit|
-          p = Position.new(row, col, digit)
-          # Row-Column constraint
-          link(row: p, col: :"r#{row}c#{col}")
-
-          # Row-Number constraints
-          link(row: p, col: :"r#{row}n#{digit}")
-
-          # Col-Number constraints
-          link(row: p, col: :"c#{col}n#{digit}")
-
-          # Box-Number constraints
-          link(row: p, col: :"b#{box_id(row, col)}n#{digit}")
+          link_position(Position.new(row, col, digit))
         end
       end
     end
   end
 
-  def box_id(row, col)
-    row / 3 * 3 + col / 3
+  def unlink_position(position)
+    constraints = constraints(position)
+    conflicing_rows = rows.find_all do |row|
+      row.value.id != position &&
+        row.value.items.any? { |col| constraints.include?(col.value.id) }
+    end
+    conflicing_rows.each(&:remove)
+  end
+
+  def link_position(position)
+    constraints(position).each do |constraint|
+      link(row: position, col: constraint)
+    end
+  end
+
+  def constraints(position)
+    [
+      :"r#{position.row}c#{position.col}",    # Row-Column constraint
+      :"r#{position.row}n#{position.digit}",  # Row-Number constraints
+      :"c#{position.col}n#{position.digit}",  # Col-Number constraints
+      :"b#{box(position)}n#{position.digit}", # Box-Number constraints
+    ]
+  end
+
+  def box(position)
+    position.row / 3 * 3 + position.col / 3
   end
 end
