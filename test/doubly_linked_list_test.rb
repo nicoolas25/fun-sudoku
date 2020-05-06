@@ -88,6 +88,8 @@ class DoublyLinkedListTest < Minitest::Test
     assert_equal [1, 2, 3], values(list)
   end
 
+  private
+
   def values(list)
     list.map(&:value)
   end

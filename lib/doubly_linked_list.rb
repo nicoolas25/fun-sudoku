@@ -31,12 +31,16 @@ class DoublyLinkedList
     end
 
     def remove
+      return if @removed
+
       @removed = true
       left.right = right
       right.left = left
     end
 
     def restore
+      return unless @removed
+
       @removed = false
       left.right = self
       right.left = self
