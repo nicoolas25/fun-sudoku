@@ -28,14 +28,5 @@ Benchmark.ips do |x|
 
   x.report('non-deterministic-one-solution') { algo2.solve }
 
-
-  algo3 = AlgorithmX.new(
-    EMPTY_MATRIX,
-    AlgorithmX::DETERMINISTIC.merge(AlgorithmX::ONE_SOLUTION)
-  )
-  algo3.behaviors = algo3.behaviors.merge(column_picker: :first.to_proc)
-
-  x.report('deterministic-one-solution-first-columns') { algo3.solve }
-
   x.compare!
 end

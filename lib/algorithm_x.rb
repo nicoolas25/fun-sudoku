@@ -6,13 +6,10 @@ class AlgorithmX
   attr_reader :matrix, :behaviors
 
   DETERMINISTIC = {
-    column_sorter: :itself.to_proc,
-    column_picker: ->(cols) { cols.min_by { |col| col.value.rows.size } },
-    row_sorter: :itself.to_proc,
+    row_sorter: :to_a.to_proc,
   }.freeze
 
   NON_DETERMINISTIC = DETERMINISTIC.merge(
-    column_sorter: ->(cols) { cols.to_a.shuffle },
     row_sorter: ->(rows) { rows.to_a.shuffle },
   ).freeze
 
@@ -39,8 +36,6 @@ class AlgorithmX
 
   def behaviors=(behaviors)
     @behaviors       = behaviors
-    @column_picker   = behaviors.fetch(:column_picker)
-    @column_sorter   = behaviors.fetch(:column_sorter)
     @row_sorter      = behaviors.fetch(:row_sorter)
     @empty_solution  = behaviors.fetch(:empty_solution)
     @no_solution     = behaviors.fetch(:no_solution)
@@ -59,11 +54,12 @@ class AlgorithmX
 
     solutions = @no_solution
 
-    easier_column = @column_picker[@column_sorter[@matrix.cols]]
-    candidate_rows = @row_sorter[easier_column.value.rows.to_a]
+    column = @matrix.cols.first
+    candidate_rows = @row_sorter[column.value.rows]
     candidate_rows.each do |row|
       cols = row.value.cols
       rows = cols.inject(Set.new) { |set, col| set.merge(col.value.rows) }
+
       removed_entries = [*cols, *rows].each(&:remove)
       child_solutions = solve
       removed_entries.reverse_each(&:restore)

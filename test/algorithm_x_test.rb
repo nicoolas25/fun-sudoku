@@ -78,7 +78,7 @@ class AlgorithmXTest < Minitest::Test
       [:E,  0, 1, 1, 0, 0, 1, 1],
       [:F,  0, 1, 0, 0, 0, 0, 1],
     )
-    assert_equal [:B, :D, :F], x.solve
+    assert_equal [:B, :F, :D], x.solve
   end
 
   def test_non_deterministic_solving
@@ -156,7 +156,7 @@ class AlgorithmXTest < Minitest::Test
       [:E,  0, 1, 1, 0, 0, 1, 1],
       [:F,  0, 1, 0, 0, 0, 0, 1],
     )
-    assert_equal [[:F, :D, :B]], x.solve
+    assert_equal [[:D, :F, :B]], x.solve
   end
 
   def test_with_multiple_solutions
@@ -168,7 +168,7 @@ class AlgorithmXTest < Minitest::Test
       [:Y,  0,  0,  1,  0],
       [:Z,  0,  0,  0,  1],
     )
-    assert_equal [[:V, :Z, :Y, :X], [:W, :Z, :Y, :X]], x.solve
+    assert_equal [[:Z, :Y, :X, :V], [:Z, :Y, :X, :W]], x.solve
   end
 
   def test_non_deterministic_solving_all
