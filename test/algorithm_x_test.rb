@@ -78,7 +78,25 @@ class AlgorithmXTest < Minitest::Test
       [:E,  0, 1, 1, 0, 0, 1, 1],
       [:F,  0, 1, 0, 0, 0, 0, 1],
     )
-    assert_equal [:B, :F, :D], x.solve
+    assert_equal [:B, :D, :F], x.solve
+  end
+
+  def test_non_deterministic_solving
+    x = algorithm_x(
+      [nil, 1, 2],
+      [:A,  0, 1],
+      [:B,  1, 0],
+      [:C,  0, 1],
+      [:D,  1, 0],
+      [:E,  0, 1],
+      [:F,  1, 0],
+      [:G,  0, 1],
+      [:H,  1, 0],
+      [:I,  0, 1],
+      [:J,  1, 1],
+    )
+    assert_equal x.solve, x.solve
+    refute_equal x.solve(deterministic: false), x.solve(deterministic: false)
   end
 
   private

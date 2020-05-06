@@ -23,7 +23,6 @@ class SudokuMatrix < DancingListsMatrix
   private
 
   def create_links!
-    # Row-Column constraints
     (0..8).each do |row|
       (0..8).each do |col|
         (1..9).map do |digit|
