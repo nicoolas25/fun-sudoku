@@ -3,24 +3,68 @@
 require 'dancing_lists_matrix'
 
 class AlgorithmX
-  attr_reader :matrix
+  attr_reader :matrix, :behaviors
 
-  def initialize(matrix)
+  DETERMINISTIC = {
+    column_sorter: :itself.to_proc,
+    column_picker: lambda do |cols|
+      cols.min_by { |col| col.value.items.count { |row| !row.removed? } }
+    end,
+    row_sorter: :itself.to_proc,
+  }.freeze
+
+  NON_DETERMINISTIC = DETERMINISTIC.merge(
+    column_sorter: ->(cols) { cols.to_a.shuffle },
+    row_sorter: ->(rows) { rows.to_a.shuffle },
+  ).freeze
+
+  ONE_SOLUTION = {
+    strategy: :return_when_found,
+    empty_solution: [],
+    no_solution: nil,
+    merge_solutions: lambda do |child_solution, row|
+      [row.value.id, *child_solution]
+    end,
+  }.freeze
+
+  ALL_SOLUTIONS = {
+    strategy: :accumulate,
+    empty_solution: [[]],
+    no_solution: [],
+    merge_solutions: lambda do |child_solutions, row|
+      child_solutions.map { |solution| [*solution, row.value.id] }
+    end,
+  }.freeze
+
+  def initialize(matrix, behaviors = DETERMINISTIC.merge(ONE_SOLUTION))
     @matrix = matrix
+    self.behaviors = behaviors
   end
 
-  def solve(deterministic: true)
-    return [] if @matrix.cols.first.nil?
-    return nil if @matrix.rows.all? { |row| row.value.items.all?(&:removed?) }
+  def behaviors=(behaviors)
+    @behaviors       = behaviors
+    @column_picker   = behaviors.fetch(:column_picker)
+    @column_sorter   = behaviors.fetch(:column_sorter)
+    @row_sorter      = behaviors.fetch(:row_sorter)
+    @empty_solution  = behaviors.fetch(:empty_solution)
+    @no_solution     = behaviors.fetch(:no_solution)
+    @merge_solutions = behaviors.fetch(:merge_solutions)
+    @strategy        = behaviors.fetch(:strategy)
+  end
 
-    easier_column = @matrix.cols
-      .yield_self { |cols| deterministic ? cols : cols.to_a.shuffle }
-      .min_by { |col| col.value.items.count { |row| !row.removed? } }
+  def solve
+    if @matrix.cols.first.nil?
+      return @empty_solution
+    end
 
-    candidate_rows = easier_column.value.items
-      .reject(&:removed?)
-      .yield_self { |cols| deterministic ? cols : cols.shuffle }
+    if @matrix.rows.all? { |row| row.value.items.all?(&:removed?) }
+      return @no_solution
+    end
 
+    solutions = @no_solution
+
+    easier_column = @column_picker[@column_sorter[@matrix.cols]]
+    candidate_rows = @row_sorter[easier_column.value.items.reject(&:removed?)]
     candidate_rows.each do |row|
       cols = row.value.items
       rows = cols.inject(Set.new) do |set, col|
@@ -28,42 +72,19 @@ class AlgorithmX
       end
 
       removed_entries = [*cols, *rows].each(&:remove)
-      solution = solve
+      child_solutions = solve
       removed_entries.reverse_each(&:restore)
 
-      return [row.value.id, *solution] if solution
-    end
-
-    nil
-  end
-
-  # TODO: Maybe this duplication could easily be avoided
-  def solve_all(deterministic: true)
-    return [[]] if @matrix.cols.first.nil?
-    return [] if @matrix.rows.all? { |e| e.value.items.all?(&:removed?) }
-
-    easier_column = @matrix.cols
-      .yield_self { |cols| deterministic ? cols : cols.to_a.shuffle }
-      .min_by { |col| col.value.items.count { |row| !row.removed? } }
-
-    candidate_rows = easier_column.value.items
-      .reject(&:removed?)
-      .yield_self { |cols| deterministic ? cols : cols.shuffle }
-
-    solutions = []
-
-    candidate_rows.each do |row|
-      cols = row.value.items
-      rows = cols.inject(Set.new) do |set, entry|
-        set.merge(entry.value.items.reject(&:removed?))
-      end
-
-      removed_entries = [*cols, *rows].each(&:remove)
-      sub_solutions = solve_all
-      removed_entries.reverse_each(&:restore)
-
-      if sub_solutions.any?
-        solutions += sub_solutions.map { |s| [*s, row.value.id] }
+      if child_solutions != @no_solution
+        local_solutions = @merge_solutions[child_solutions, row]
+        case @strategy
+        when :return_when_found
+          return local_solutions
+        when :accumulate
+          solutions += local_solutions
+        else
+          raise "Unknown strategy: '#{@strategy}'"
+        end
       end
     end
 

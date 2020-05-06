@@ -96,53 +96,55 @@ class AlgorithmXTest < Minitest::Test
       [:J,  1, 1],
     )
     assert_equal x.solve, x.solve
-    refute_equal x.solve(deterministic: false), x.solve(deterministic: false)
+
+    non_deterministic(x)
+    refute_equal x.solve, x.solve
   end
 
   def test_with_an_empty_matrix_it_is_finds_all_solutions
-    x = algorithm_x
-    assert_equal [[]], x.solve_all
+    x = all_solutions algorithm_x
+    assert_equal [[]], x.solve
   end
 
   def test_with_a_single_row_and_column_set_to_0_it_has_no_solutions
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, :A],
       [:Z,  0],
     )
-    assert_equal [], x.solve_all
+    assert_equal [], x.solve
   end
 
   def test_that_it_reinsert_everything_when_failed_to_solve_all
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, :A],
       [:Z,  0],
     )
-    x.solve_all
+    x.solve
     assert_equal 1, x.matrix.cols.count
     assert_equal 1, x.matrix.rows.count
   end
 
   def test_with_a_single_solution_it_finds_it
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, :A],
       [:Z,  1],
     )
-    assert_equal [[:Z]], x.solve_all
+    assert_equal [[:Z]], x.solve
   end
 
   def test_that_it_reinsert_everything_when_solved_all
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, :A],
       [:Z,  1],
     )
-    x.solve_all
+    x.solve
     assert_equal 1, x.matrix.cols.count
     assert_equal 1, x.matrix.rows.count
   end
 
   def test_with_knuth_example_finds_all_solutions
     # See https://en.wikipedia.org/wiki/Knuth%27s_Algorithm_X
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, 1, 2, 3, 4, 5, 6, 7],
       [:A,  1, 0, 0, 1, 0, 0, 1],
       [:B,  1, 0, 0, 1, 0, 0, 0],
@@ -151,11 +153,11 @@ class AlgorithmXTest < Minitest::Test
       [:E,  0, 1, 1, 0, 0, 1, 1],
       [:F,  0, 1, 0, 0, 0, 0, 1],
     )
-    assert_equal [[:F, :D, :B]], x.solve_all
+    assert_equal [[:F, :D, :B]], x.solve
   end
 
   def test_with_multiple_solutions
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, :A, :B, :C, :D],
       [:V,  1,  0,  0,  0],
       [:W,  1,  0,  0,  0],
@@ -163,11 +165,11 @@ class AlgorithmXTest < Minitest::Test
       [:Y,  0,  0,  1,  0],
       [:Z,  0,  0,  0,  1],
     )
-    assert_equal [[:V, :Z, :Y, :X], [:W, :Z, :Y, :X]], x.solve_all
+    assert_equal [[:V, :Z, :Y, :X], [:W, :Z, :Y, :X]], x.solve
   end
 
   def test_non_deterministic_solving_all
-    x = algorithm_x(
+    x = all_solutions algorithm_x(
       [nil, 1, 2],
       [:A,  0, 1],
       [:B,  1, 0],
@@ -180,12 +182,23 @@ class AlgorithmXTest < Minitest::Test
       [:I,  0, 1],
       [:J,  1, 1],
     )
-    assert_equal x.solve_all, x.solve_all
-    refute_equal x.solve_all(deterministic: false), x.solve_all(deterministic: false)
+    assert_equal x.solve, x.solve
+
+    non_deterministic(x)
+    refute_equal x.solve, x.solve
   end
 
-
   private
+
+  def non_deterministic(algo)
+    algo.behaviors = algo.behaviors.merge(AlgorithmX::NON_DETERMINISTIC)
+    algo
+  end
+
+  def all_solutions(algo)
+    algo.behaviors = algo.behaviors.merge(AlgorithmX::ALL_SOLUTIONS)
+    algo
+  end
 
   def algorithm_x(*rows)
     matrix = DancingListsMatrix.new
