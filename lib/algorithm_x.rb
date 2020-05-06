@@ -3,49 +3,27 @@
 require 'dancing_lists_matrix'
 
 class AlgorithmX
+  attr_reader :matrix
+
   def initialize(matrix)
     @matrix = matrix
   end
 
-  def solve(solution = [])
-    if @matrix.cols.count.zero?
-      return solution
-    elsif @matrix.rows.count.zero?
-      return nil
-    end
+  def solve
+    return [] if @matrix.cols.first.nil?
+    return nil if @matrix.rows.all? { |e| e.value.items.all?(&:removed?) }
 
-    col = @matrix.cols.first
-    # puts "Trying to solve #{col.value.id}"
-
-    col.value.items.each do |solution_row|
-      # TODO: This could be optimized if we used doubly linked lists
-      # as columns's value rather than Set
-      next if solution_row.removed?
-
-      # puts "  Using #{solution_row.value.id} as a part of the solution"
-      current_solution = [*solution, solution_row.value.id]
-
-      cols = solution_row.value.items.to_a
-      rows = cols.map { |c| c.value.items }.reduce(&:union).to_a
-
-      cols.each(&:remove)
-      # puts "  - Removing #{cols.map(&:value).map(&:id)}"
-
-      rows.each(&:remove)
-      # puts "  - Removing #{rows.map(&:value).map(&:id)}"
-
-      final_solution = solve(current_solution)
-
-      if final_solution
-        # puts "=> Solution is found, bubbling up!"
-        return final_solution
-      else
-        # puts "  Oups, #{solution_row.value.id} wasn't the one"
-        rows.reverse_each(&:restore)
-        # puts "  - Restoring #{rows.map(&:value).map(&:id)}"
-        cols.reverse_each(&:restore)
-        # puts "  - Restoring #{cols.map(&:value).map(&:id)}"
+    @matrix.cols.first.value.items.reject(&:removed?).each do |row|
+      cols = row.value.items
+      rows = cols.inject(Set.new) do |set, entry|
+        set.merge(entry.value.items.reject(&:removed?))
       end
+
+      removed_entries = [*cols, *rows].each(&:remove)
+      solution = solve
+      removed_entries.reverse_each(&:restore)
+
+      return [row.value.id, *solution] if solution
     end
 
     nil

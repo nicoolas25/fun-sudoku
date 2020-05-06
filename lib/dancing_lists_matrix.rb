@@ -16,11 +16,13 @@ class DancingListsMatrix
     @cols = DoublyLinkedList.new
   end
 
-  def link(row:, col:)
+  def link(row:, col:, value: 1)
     col_entry = get(@cols, col)
     row_entry = get(@rows, row)
-    col_entry.value.items << row_entry
-    row_entry.value.items << col_entry
+    if value == 1
+      col_entry.value.items << row_entry
+      row_entry.value.items << col_entry
+    end
   end
 
   private

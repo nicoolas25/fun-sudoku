@@ -4,25 +4,45 @@ require 'minitest/autorun'
 require 'algorithm_x'
 
 class AlgorithmXTest < Minitest::Test
-  def test_with_an_empty_matrix
+  def test_with_an_empty_matrix_it_is_solved_it_is_empty
     x = algorithm_x
     assert_equal [], x.solve
   end
 
-  def test_with_a_single_row_and_column_set_to_0
+  def test_with_a_single_row_and_column_set_to_0_it_is_nil
     x = algorithm_x(
       [nil, :A],
       [:Z,  0],
     )
-    assert_equal [], x.solve
+    assert_nil x.solve
   end
 
-  def test_with_a_single_row_and_column_set_to_1
+  def test_that_it_reinsert_everything_when_failed_to_solve
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  0],
+    )
+    x.solve
+    assert_equal 1, x.matrix.cols.count
+    assert_equal 1, x.matrix.rows.count
+  end
+
+  def test_with_a_single_row_and_column_set_to_1_it_is_the_only_row
     x = algorithm_x(
       [nil, :A],
       [:Z,  1],
     )
     assert_equal [:Z], x.solve
+  end
+
+  def test_that_it_reinsert_everything_when_solved
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  1],
+    )
+    x.solve
+    assert_equal 1, x.matrix.cols.count
+    assert_equal 1, x.matrix.rows.count
   end
 
   def test_with_an_obvious_solution
@@ -69,7 +89,7 @@ class AlgorithmXTest < Minitest::Test
       rows.each do |row_header, *rows_values|
         rows_values.each_with_index do |value, index|
           col_header = col_headers[index + 1]
-          matrix.link(col: col_header, row: row_header) if value == 1
+          matrix.link(col: col_header, row: row_header, value: value)
         end
       end
     end
