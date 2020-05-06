@@ -64,11 +64,9 @@ class DoublyLinkedListTest < Minitest::Test
     entry = list.find { |e| e.value == 3 }
     entry.remove
     assert_equal [1, 2], values(list)
-    assert entry.removed?
 
     entry.restore
     assert_equal [1, 2, 3], values(list)
-    refute entry.removed?
   end
 
   def test_removing_twice_does_not_mess_up_the_list
@@ -87,6 +85,8 @@ class DoublyLinkedListTest < Minitest::Test
     entry.restore
     assert_equal [1, 2, 3], values(list)
   end
+
+  # TODO: Test the on_remove and on_restore callbacks
 
   private
 

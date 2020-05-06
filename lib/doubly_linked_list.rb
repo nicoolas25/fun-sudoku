@@ -30,20 +30,32 @@ class DoublyLinkedList
       @removed = false
     end
 
+    def on_remove(&block)
+      (@on_remove_callbacks ||= []) << block
+    end
+
+    def on_restore(&block)
+      (@on_restore_callbacks ||= []) << block
+    end
+
     def remove
       return if @removed
 
-      @removed = true
       left.right = right
       right.left = left
+
+      @on_remove_callbacks.each(&:call) if defined?(@on_remove_callbacks)
+      @removed = true
     end
 
     def restore
       return unless @removed
 
-      @removed = false
       left.right = self
       right.left = self
+
+      @on_restore_callbacks.each(&:call) if defined?(@on_restore_callbacks)
+      @removed = false
     end
 
     def insert_after(value)
@@ -51,10 +63,6 @@ class DoublyLinkedList
         right.left = new_entry
         self.right = new_entry
       end
-    end
-
-    def removed?
-      @removed
     end
   end
 end

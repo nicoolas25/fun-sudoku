@@ -49,7 +49,7 @@ class SudokuMatrix < DancingListsMatrix
     constraints = constraints(position)
     conflicing_rows = rows.find_all do |row|
       row.value.id != position &&
-        row.value.items.any? { |col| constraints.include?(col.value.id) }
+        row.value.cols.any? { |col| constraints.include?(col.value.id) }
     end
     conflicing_rows.each(&:remove)
   end

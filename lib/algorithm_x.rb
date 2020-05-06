@@ -7,9 +7,7 @@ class AlgorithmX
 
   DETERMINISTIC = {
     column_sorter: :itself.to_proc,
-    column_picker: lambda do |cols|
-      cols.min_by { |col| col.value.items.count { |row| !row.removed? } }
-    end,
+    column_picker: ->(cols) { cols.min_by { |col| col.value.rows.size } },
     row_sorter: :itself.to_proc,
   }.freeze
 
@@ -22,17 +20,15 @@ class AlgorithmX
     strategy: :return_when_found,
     empty_solution: [],
     no_solution: nil,
-    merge_solutions: lambda do |child_solution, row|
-      [row.value.id, *child_solution]
-    end,
+    merge_solutions: ->(solution, row) { [row.value.id, *solution] },
   }.freeze
 
   ALL_SOLUTIONS = {
     strategy: :accumulate,
     empty_solution: [[]],
     no_solution: [],
-    merge_solutions: lambda do |child_solutions, row|
-      child_solutions.map { |solution| [*solution, row.value.id] }
+    merge_solutions: lambda do |solutions, row|
+      solutions.map { |solution| [*solution, row.value.id] }
     end,
   }.freeze
 
@@ -64,13 +60,10 @@ class AlgorithmX
     solutions = @no_solution
 
     easier_column = @column_picker[@column_sorter[@matrix.cols]]
-    candidate_rows = @row_sorter[easier_column.value.items.reject(&:removed?)]
+    candidate_rows = @row_sorter[easier_column.value.rows.to_a]
     candidate_rows.each do |row|
-      cols = row.value.items
-      rows = cols.inject(Set.new) do |set, col|
-        set.merge(col.value.items.reject(&:removed?))
-      end
-
+      cols = row.value.cols
+      rows = cols.inject(Set.new) { |set, col| set.merge(col.value.rows) }
       removed_entries = [*cols, *rows].each(&:remove)
       child_solutions = solve
       removed_entries.reverse_each(&:restore)

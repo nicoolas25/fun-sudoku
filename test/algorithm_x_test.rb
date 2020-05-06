@@ -82,7 +82,7 @@ class AlgorithmXTest < Minitest::Test
   end
 
   def test_non_deterministic_solving
-    x = algorithm_x(
+    matrix = [
       [nil, 1, 2],
       [:A,  0, 1],
       [:B,  1, 0],
@@ -94,11 +94,14 @@ class AlgorithmXTest < Minitest::Test
       [:H,  1, 0],
       [:I,  0, 1],
       [:J,  1, 1],
-    )
-    assert_equal x.solve, x.solve
+    ]
+    x1 = algorithm_x(*matrix)
+    x2 = algorithm_x(*matrix)
+    assert_equal x1.solve, x2.solve
 
-    non_deterministic(x)
-    refute_equal x.solve, x.solve
+    x3 = non_deterministic algorithm_x(*matrix)
+    x4 = non_deterministic algorithm_x(*matrix)
+    refute_equal x3.solve, x4.solve
   end
 
   def test_with_an_empty_matrix_it_is_finds_all_solutions
@@ -169,7 +172,7 @@ class AlgorithmXTest < Minitest::Test
   end
 
   def test_non_deterministic_solving_all
-    x = all_solutions algorithm_x(
+    matrix = [
       [nil, 1, 2],
       [:A,  0, 1],
       [:B,  1, 0],
@@ -181,11 +184,14 @@ class AlgorithmXTest < Minitest::Test
       [:H,  1, 0],
       [:I,  0, 1],
       [:J,  1, 1],
-    )
-    assert_equal x.solve, x.solve
+    ]
+    x1 = all_solutions algorithm_x(*matrix)
+    x2 = all_solutions algorithm_x(*matrix)
+    assert_equal x1.solve, x2.solve
 
-    non_deterministic(x)
-    refute_equal x.solve, x.solve
+    x3 = non_deterministic all_solutions algorithm_x(*matrix)
+    x4 = non_deterministic all_solutions algorithm_x(*matrix)
+    refute_equal x3.solve, x4.solve
   end
 
   private
