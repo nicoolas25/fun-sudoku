@@ -99,6 +99,92 @@ class AlgorithmXTest < Minitest::Test
     refute_equal x.solve(deterministic: false), x.solve(deterministic: false)
   end
 
+  def test_with_an_empty_matrix_it_is_finds_all_solutions
+    x = algorithm_x
+    assert_equal [[]], x.solve_all
+  end
+
+  def test_with_a_single_row_and_column_set_to_0_it_has_no_solutions
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  0],
+    )
+    assert_equal [], x.solve_all
+  end
+
+  def test_that_it_reinsert_everything_when_failed_to_solve_all
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  0],
+    )
+    x.solve_all
+    assert_equal 1, x.matrix.cols.count
+    assert_equal 1, x.matrix.rows.count
+  end
+
+  def test_with_a_single_solution_it_finds_it
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  1],
+    )
+    assert_equal [[:Z]], x.solve_all
+  end
+
+  def test_that_it_reinsert_everything_when_solved_all
+    x = algorithm_x(
+      [nil, :A],
+      [:Z,  1],
+    )
+    x.solve_all
+    assert_equal 1, x.matrix.cols.count
+    assert_equal 1, x.matrix.rows.count
+  end
+
+  def test_with_knuth_example_finds_all_solutions
+    # See https://en.wikipedia.org/wiki/Knuth%27s_Algorithm_X
+    x = algorithm_x(
+      [nil, 1, 2, 3, 4, 5, 6, 7],
+      [:A,  1, 0, 0, 1, 0, 0, 1],
+      [:B,  1, 0, 0, 1, 0, 0, 0],
+      [:C,  0, 0, 0, 1, 1, 0, 1],
+      [:D,  0, 0, 1, 0, 1, 1, 0],
+      [:E,  0, 1, 1, 0, 0, 1, 1],
+      [:F,  0, 1, 0, 0, 0, 0, 1],
+    )
+    assert_equal [[:F, :D, :B]], x.solve_all
+  end
+
+  def test_with_multiple_solutions
+    x = algorithm_x(
+      [nil, :A, :B, :C, :D],
+      [:V,  1,  0,  0,  0],
+      [:W,  1,  0,  0,  0],
+      [:X,  0,  1,  0,  0],
+      [:Y,  0,  0,  1,  0],
+      [:Z,  0,  0,  0,  1],
+    )
+    assert_equal [[:V, :Z, :Y, :X], [:W, :Z, :Y, :X]], x.solve_all
+  end
+
+  def test_non_deterministic_solving_all
+    x = algorithm_x(
+      [nil, 1, 2],
+      [:A,  0, 1],
+      [:B,  1, 0],
+      [:C,  0, 1],
+      [:D,  1, 0],
+      [:E,  0, 1],
+      [:F,  1, 0],
+      [:G,  0, 1],
+      [:H,  1, 0],
+      [:I,  0, 1],
+      [:J,  1, 1],
+    )
+    assert_equal x.solve_all, x.solve_all
+    refute_equal x.solve_all(deterministic: false), x.solve_all(deterministic: false)
+  end
+
+
   private
 
   def algorithm_x(*rows)
