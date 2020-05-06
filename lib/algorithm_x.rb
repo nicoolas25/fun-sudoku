@@ -57,7 +57,7 @@ class AlgorithmX
       return @empty_solution
     end
 
-    if @matrix.rows.all? { |row| row.value.items.all?(&:removed?) }
+    if @matrix.rows.first.nil?
       return @no_solution
     end
 
