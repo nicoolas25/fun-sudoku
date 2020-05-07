@@ -58,28 +58,40 @@ class AlgorithmX
     candidate_rows = @row_sorter[column.rows.map(&:value)]
     candidate_rows.each do |row|
       cols = row.cols.map(&:value)
-      rows = cols.inject(Set.new) do |set, col|
-        set.merge(col.rows.map(&:value))
-      end
+      rows = cols.inject(Set.new) { |s, c| s.merge(c.rows.map(&:value)) }
+      entries = rows.each_with_object([]) { |r, e| e.push(*r.cols) }
 
-      links = [*cols, *rows, *rows.flat_map { |r| r.cols.to_a }]
-      links.each(&:remove)
-      child_solutions = solve
-      links.reverse_each(&:restore)
+      child_solutions = removing(cols, rows, entries) { solve }
 
-      if child_solutions != @no_solution
-        local_solutions = @merge_solutions[child_solutions, row]
-        case @strategy
-        when :return_when_found
-          return local_solutions
-        when :accumulate
-          solutions += local_solutions
-        else
-          raise "Unknown strategy: '#{@strategy}'"
-        end
+      next if child_solutions == @no_solution
+
+      local_solutions = @merge_solutions[child_solutions, row]
+
+      if @strategy == :return_when_found
+        return local_solutions
+      elsif @strategy == :accumulate
+        solutions += local_solutions
+      else
+        raise "Unknown strategy: '#{@strategy}'"
       end
     end
 
     solutions
+  end
+
+  private
+
+  def removing(*links_enums)
+    links_enums.each do |links|
+      links.each(&:remove)
+    end
+
+    result = yield
+
+    links_enums.reverse_each do |links|
+      links.reverse_each(&:restore)
+    end
+
+    result
   end
 end
