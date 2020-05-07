@@ -61,7 +61,7 @@ class AlgorithmX
       rows = cols.inject(Set.new) { |s, c| s.merge(c.rows.map(&:value)) }
       entries = rows.each_with_object([]) { |r, e| e.push(*r.cols) }
 
-      child_solutions = removing(cols, rows, entries) { solve }
+      child_solutions = solve_removing(cols, rows, entries)
 
       next if child_solutions == @no_solution
 
@@ -81,12 +81,12 @@ class AlgorithmX
 
   private
 
-  def removing(*links_enums)
+  def solve_removing(*links_enums)
     links_enums.each do |links|
       links.each(&:remove)
     end
 
-    result = yield
+    result = solve
 
     links_enums.reverse_each do |links|
       links.reverse_each(&:restore)
