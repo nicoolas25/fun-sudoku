@@ -90,7 +90,8 @@ class SudokuMatrixTest < Minitest::Test
     STR
 
     algorithm = AlgorithmX.new(matrix)
-    assert_equal <<~STR.strip, SudokuMatrix.to_string(positions: algorithm.solve)
+    positions = algorithm.solve
+    assert_equal <<~STR.strip, SudokuMatrix.to_string(positions: positions)
       812753649
       943682175
       675491283
@@ -106,6 +107,4 @@ class SudokuMatrixTest < Minitest::Test
     # solutions = algorithm.solve
     # assert_equal 81, solutions.size
   end
-
-
 end

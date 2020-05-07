@@ -55,11 +55,11 @@ class AlgorithmX
     solutions = @no_solution
 
     column = @matrix.cols.first
-    candidate_rows = @row_sorter[column.rows.map(&:value)]
+    candidate_rows = @row_sorter[column.rows]
     candidate_rows.each do |row|
-      cols = row.cols.map(&:value)
-      rows = cols.inject(Set.new) { |s, c| s.merge(c.rows.map(&:value)) }
-      entries = rows.each_with_object([]) { |r, e| e.push(*r.cols) }
+      cols = row.cols
+      rows = cols.inject(Set.new) { |s, c| s.merge(c.rows) }
+      entries = rows.each_with_object([]) { |r, e| e.push(*r.items) }
 
       child_solutions = solve_removing(cols, rows, entries)
 

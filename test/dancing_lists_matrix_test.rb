@@ -33,7 +33,7 @@ class DancingListsMatrixTest < Minitest::Test
     assert_equal col, col_entry.id
 
     # Rows and columns see each other
-    assert row_entry.cols.map(&:value).include?(col_entry)
-    assert col_entry.rows.map(&:value).include?(row_entry)
+    assert row_entry.cols.include?(col_entry)
+    assert col_entry.rows.include?(row_entry)
   end
 end

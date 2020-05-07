@@ -22,8 +22,8 @@ class DancingListsMatrix
 
     if value == 1
       entry = DoubleEntry.new(vertical: col_header, horizontal: row_header)
-      col_header.rows.append(entry.h_entry)
-      row_header.cols.append(entry.v_entry)
+      col_header.items.append(entry.h_entry)
+      row_header.items.append(entry.v_entry)
     end
   end
 
@@ -35,7 +35,7 @@ class DancingListsMatrix
 
     @rows.each do |r|
       line = @cols.map do |c|
-        if r.cols.any? { |c2| c.id == c2.value.id }
+        if r.cols.any? { |c2| c.id == c2.id }
           '%4s' % 1
         else
           '%4s' % 0
@@ -56,31 +56,34 @@ class DancingListsMatrix
 
   def add_col(id)
     header = ColHeader.new(id)
-    header.rows = DoublyLinkedList.new
     @cols.append(header)
   end
 
   def add_row(id)
     header = RowHeader.new(id)
-    header.cols = DoublyLinkedList.new
     @rows.append(header)
   end
 
   Header = Class.new(Entry) do
+    attr_reader :items
+
     alias_method :id, :value
 
     def initialize(id)
       super(id, nil, nil)
+      @items = DoublyLinkedList.new
     end
   end
 
   ColHeader = Class.new(Header) do
-    attr_accessor :rows
-    alias_method :items, :rows
+    def rows
+      @items.map(&:value)
+    end
   end
 
   RowHeader = Class.new(Header) do
-    attr_accessor :cols
-    alias_method :items, :cols
+    def cols
+      @items.map(&:value)
+    end
   end
 end
