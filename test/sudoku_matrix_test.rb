@@ -53,4 +53,59 @@ class SudokuMatrixTest < Minitest::Test
       956843271
     STR
   end
+
+  def test_adding_clues_then_list_solutions
+    matrix = SudokuMatrix.new
+    matrix.add_clue(row: 0, col: 0, digit: 8)
+    matrix.add_clue(row: 1, col: 2, digit: 3)
+    matrix.add_clue(row: 1, col: 3, digit: 6)
+    matrix.add_clue(row: 2, col: 1, digit: 7)
+    matrix.add_clue(row: 2, col: 4, digit: 9)
+    matrix.add_clue(row: 2, col: 6, digit: 2)
+    matrix.add_clue(row: 3, col: 1, digit: 5)
+    matrix.add_clue(row: 3, col: 5, digit: 7)
+    matrix.add_clue(row: 4, col: 4, digit: 4)
+    matrix.add_clue(row: 4, col: 5, digit: 5)
+    matrix.add_clue(row: 4, col: 6, digit: 7)
+    matrix.add_clue(row: 5, col: 3, digit: 1)
+    matrix.add_clue(row: 5, col: 7, digit: 3)
+    matrix.add_clue(row: 6, col: 2, digit: 1)
+    matrix.add_clue(row: 6, col: 7, digit: 6)
+    matrix.add_clue(row: 6, col: 8, digit: 8)
+    matrix.add_clue(row: 7, col: 2, digit: 8)
+    matrix.add_clue(row: 7, col: 3, digit: 5)
+    matrix.add_clue(row: 7, col: 7, digit: 1)
+    matrix.add_clue(row: 8, col: 1, digit: 9)
+    matrix.add_clue(row: 8, col: 6, digit: 4)
+    assert_equal <<~STR.strip, SudokuMatrix.to_string(positions: matrix.clues)
+      8........
+      ..36.....
+      .7..9.2..
+      .5...7...
+      ....457..
+      ...1...3.
+      ..1....68
+      ..85...1.
+      .9....4..
+    STR
+
+    algorithm = AlgorithmX.new(matrix)
+    assert_equal <<~STR.strip, SudokuMatrix.to_string(positions: algorithm.solve)
+      812753649
+      943682175
+      675491283
+      154237896
+      369845721
+      287169534
+      521974368
+      438526917
+      796318452
+    STR
+
+    # algorithm.behaviors = algorithm.behaviors.merge(AlgorithmX::ALL_SOLUTIONS)
+    # solutions = algorithm.solve
+    # assert_equal 81, solutions.size
+  end
+
+
 end
