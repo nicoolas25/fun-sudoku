@@ -43,14 +43,14 @@ class SudokuMatrixTest < Minitest::Test
     assert positions.size == 81
     assert_equal <<~STR.strip, SudokuMatrix.to_string(positions: positions)
       123456789
-      467189235
-      589237164
-      218365947
-      374918652
-      695724318
-      731542896
-      842691573
-      956873421
+      467189523
+      589237146
+      214398657
+      375612498
+      698574312
+      731925864
+      842761935
+      956843271
     STR
   end
 end

@@ -17,7 +17,7 @@ class AlgorithmX
     strategy: :return_when_found,
     empty_solution: [],
     no_solution: nil,
-    merge_solutions: ->(solution, row) { [row.value.id, *solution] },
+    merge_solutions: ->(solution, row) { [row.id, *solution] },
   }.freeze
 
   ALL_SOLUTIONS = {
@@ -25,7 +25,7 @@ class AlgorithmX
     empty_solution: [[]],
     no_solution: [],
     merge_solutions: lambda do |solutions, row|
-      solutions.map { |solution| [*solution, row.value.id] }
+      solutions.map { |solution| [*solution, row.id] }
     end,
   }.freeze
 
@@ -55,14 +55,17 @@ class AlgorithmX
     solutions = @no_solution
 
     column = @matrix.cols.first
-    candidate_rows = @row_sorter[column.value.rows]
+    candidate_rows = @row_sorter[column.rows.map(&:value)]
     candidate_rows.each do |row|
-      cols = row.value.cols
-      rows = cols.inject(Set.new) { |set, col| set.merge(col.value.rows) }
+      cols = row.cols.map(&:value)
+      rows = cols.inject(Set.new) do |set, col|
+        set.merge(col.rows.map(&:value))
+      end
 
-      removed_entries = [*cols, *rows].each(&:remove)
+      links = [*cols, *rows, *rows.flat_map { |r| r.cols.to_a }]
+      links.each(&:remove)
       child_solutions = solve
-      removed_entries.reverse_each(&:restore)
+      links.reverse_each(&:restore)
 
       if child_solutions != @no_solution
         local_solutions = @merge_solutions[child_solutions, row]

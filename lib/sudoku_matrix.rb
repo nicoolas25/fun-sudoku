@@ -48,10 +48,10 @@ class SudokuMatrix < DancingListsMatrix
   def unlink_position(position)
     constraints = constraints(position)
     conflicing_rows = rows.find_all do |row|
-      row.value.id != position &&
-        row.value.cols.any? { |col| constraints.include?(col.value.id) }
+      row.id != position && row.cols.any? { |col| constraints.include?(col.value.id) }
     end
     conflicing_rows.each(&:remove)
+    conflicing_rows.flat_map { |r| r.cols.to_a }.each(&:remove)
   end
 
   def link_position(position)

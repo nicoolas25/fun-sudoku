@@ -17,15 +17,15 @@ class DoublyLinkedListTest < Minitest::Test
   def test_appending_an_element
     value = Object.new
     list = DoublyLinkedList.new
-    entry = list.append(value)
-    assert_kind_of DoublyLinkedList::Entry, entry
+    entry = list.append_value(value)
+    assert_kind_of Entry, entry
     assert_same value, entry.value
   end
 
   def test_enumerable_returns_entries_rather_than_values
     value = Object.new
     list = build(value)
-    assert_kind_of DoublyLinkedList::Entry, list.first
+    assert_kind_of Entry, list.first
   end
 
   def test_adding_values_to_the_list
@@ -86,8 +86,6 @@ class DoublyLinkedListTest < Minitest::Test
     assert_equal [1, 2, 3], values(list)
   end
 
-  # TODO: Test the on_remove and on_restore callbacks
-
   private
 
   def values(list)
@@ -96,7 +94,7 @@ class DoublyLinkedListTest < Minitest::Test
 
   def build(*values)
     DoublyLinkedList.new.tap do |list|
-      values.each { |value| list.append(value) }
+      values.each { |value| list.append_value(value) }
     end
   end
 end

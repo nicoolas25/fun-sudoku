@@ -26,14 +26,14 @@ class DancingListsMatrixTest < Minitest::Test
 
     # The row we inserted is present
     row_entry = matrix.rows.first
-    assert_equal row, row_entry.value.id
+    assert_equal row, row_entry.id
 
     # The col we inserted is present
     col_entry = matrix.cols.first
-    assert_equal col, col_entry.value.id
+    assert_equal col, col_entry.id
 
     # Rows and columns see each other
-    assert row_entry.value.cols.include?(col_entry)
-    assert col_entry.value.rows.include?(row_entry)
+    assert row_entry.cols.map(&:value).include?(col_entry)
+    assert col_entry.rows.map(&:value).include?(row_entry)
   end
 end
