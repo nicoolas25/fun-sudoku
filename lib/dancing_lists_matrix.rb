@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
 require 'entry'
 require 'double_entry'
 require 'doubly_linked_list'
